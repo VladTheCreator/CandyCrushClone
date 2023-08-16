@@ -1,2 +1,2 @@
 # CandyCrushClone
-This game is a copy of a popular game "Candy Crush".
+This game is a copy of the popular game "Candy Crush".

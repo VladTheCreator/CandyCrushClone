@@ -44,9 +44,15 @@ public class CandySwapper : MonoBehaviour
                 else
                 {
                     StartCoroutine(CancelSwop());
+                    checker.StartCoroutineHighlightPossibleMatches();
                 }
             }
-            checker.StartCoroutineHighlightPossibleMatches();
+            if (!destroyer.DestroyMatchesCoroutineIsRunning
+                && !destroyer.MoveCandyCoroutineIsRunning
+                && !destroyer.FillEmptyIndexesCoroutineIsRunning)
+            {
+                checker.StartCoroutineHighlightPossibleMatches();
+            }
         }
     }
     private void SwopCandiesInDirectionOfSwap(Vector2 mousePositionWorld)

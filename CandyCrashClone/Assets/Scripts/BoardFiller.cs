@@ -6,6 +6,8 @@ public class BoardFiller : MonoBehaviour
 {
     private GridGenerator generator;
     private MatchChecker checker;
+    private bool _fillEmptyIndexesCoroutineIsRunning;
+    public bool FillEmptyIndexesCoroutineIsRunning => _fillEmptyIndexesCoroutineIsRunning;
     private void Awake()
     {
         generator = GetComponent<GridGenerator>();
@@ -13,6 +15,7 @@ public class BoardFiller : MonoBehaviour
     }
     public IEnumerator FillEmptyIndexes()
     {
+        _fillEmptyIndexesCoroutineIsRunning = true;
         yield return new WaitForSeconds(1f);
         List<Vector2Int> emptyIndexes = generator.FindEmpty();
         for (int i = 0; i < emptyIndexes.Count; i++)
@@ -26,5 +29,6 @@ public class BoardFiller : MonoBehaviour
         {
             checker.DestroyMatches();
         }
+        _fillEmptyIndexesCoroutineIsRunning = false;
     }
 }

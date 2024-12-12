@@ -7,6 +7,9 @@ public class CandyMover : MonoBehaviour
 {
     private GridGenerator generator;
     private BoardFiller filler;
+    private bool _moveCandiesCoroutineIsRunning;
+    public bool MoveCandiesCoroutineIsRunning => _moveCandiesCoroutineIsRunning;
+    public bool FillEmptyIndexesCoroutineIsRunning => filler.FillEmptyIndexesCoroutineIsRunning;
     private void Awake()
     {
         generator = GetComponent<GridGenerator>();
@@ -128,6 +131,7 @@ public class CandyMover : MonoBehaviour
     }
     public IEnumerator MoveCandiesDown(List<Vector2Int> destroyedCandyIndexes)
     {
+        _moveCandiesCoroutineIsRunning = true;
         yield return new WaitForSeconds(1f);
        
         Dictionary<int, List<Vector2Int>> columnEmptyIndexesPairs =
@@ -145,6 +149,7 @@ public class CandyMover : MonoBehaviour
         }
 
         StartCoroutine(filler.FillEmptyIndexes());
+        _moveCandiesCoroutineIsRunning = false;
     }
 
     private List<int> GetOnlyY(List<Vector2Int> indexes)

@@ -15,90 +15,85 @@ public class CandyMover : MonoBehaviour
         generator = GetComponent<GridGenerator>();
         filler = GetComponent<BoardFiller>();
     }
-    private Dictionary<int, List<Vector2Int>> CreateColumnEmptyIndexesPairs(List<Vector2Int> destroyedCandyIndexes)
+    /// <summary>
+    /// Create a dictionary where key is a number of a column and the value is the empty spaces in that column
+    /// </summary>
+    /// <param name="emptySpaces"> Empty spaces on the board </param>
+    /// <returns></returns>
+    private Dictionary<int, List<Vector2Int>> ColumnToEmptySpacesDictionary(List<Vector2Int> emptySpaces)
     {
-        Dictionary<int, List<Vector2Int>> columnEmptyIndexesPairs =
-            new Dictionary<int, List<Vector2Int>>();
-        for (int index = 0; index < destroyedCandyIndexes.Count; index++)
+        Dictionary<int, List<Vector2Int>> columnToEmptySpacesDictionary = new Dictionary<int, List<Vector2Int>>();
+        foreach (Vector2Int emptySpace in emptySpaces)
         {
-            int key = destroyedCandyIndexes[index].x;
-            if (columnEmptyIndexesPairs.ContainsKey(key))
+            int key = emptySpace.x;
+            if (columnToEmptySpacesDictionary.ContainsKey(key))
             {
-                columnEmptyIndexesPairs[key].Add(destroyedCandyIndexes[index]);
+                columnToEmptySpacesDictionary[key].Add(emptySpace);
             }
             else
             {
-                columnEmptyIndexesPairs.Add(key, new List<Vector2Int> { destroyedCandyIndexes[index] });
+                columnToEmptySpacesDictionary.Add(key, new List<Vector2Int> { emptySpace });
             }
 
         }
-        return columnEmptyIndexesPairs;
+        return columnToEmptySpacesDictionary;
     }
-    private List<List<int>> DevideEmptyIndexesByProximity(List<Vector2Int> emptyIndexesInColumn)
-    {
-        List<int> emptyYInColumn = GetOnlyY(emptyIndexesInColumn);
-        int lowestEmptyYIndex = FindLowestY(emptyYInColumn);
-        List<List<int>> emptyIndexesGroups = new List<List<int>>();
-        emptyIndexesGroups.Add(new List<int>());
-        int EmptyIndexGroupCount = 0;
-        List<int> currentGroup = emptyIndexesGroups[EmptyIndexGroupCount];
-        currentGroup.Add(lowestEmptyYIndex);
-        emptyYInColumn.Remove(lowestEmptyYIndex);
-        emptyYInColumn = SortedIncrease(emptyYInColumn);
 
-        for (int j = 0; j < emptyYInColumn.Count; j++)
+    private List<List<int>> GroupConsecutiveEmptySpaces(List<Vector2Int> emptySpacesInColumn)
+    {
+        List<int> yValues = emptySpacesInColumn.Select(space => space.y).ToList();
+        int lowest = yValues.Min();
+        List<List<int>> emptySpacesGroups = new List<List<int>>{ new List<int>() };
+        int groupCount = 0;
+        List<int> currentGroup = emptySpacesGroups[groupCount];
+        currentGroup.Add(lowest);
+        yValues = yValues.OrderBy(y => y).ToList();
+
+        foreach (int y in yValues)
         {
-            int lastInCurrentGroup = currentGroup[currentGroup.Count - 1];
-            if (emptyYInColumn[j] == lastInCurrentGroup + 1)
+            if (y == currentGroup.Last() + 1)
             {
-                currentGroup.Add(emptyYInColumn[j]);
+                currentGroup.Add(y);
             }
-            else if (emptyYInColumn[j] > lastInCurrentGroup + 1)
+            else if (y > currentGroup.Last() + 1)
             {
-                EmptyIndexGroupCount++;
-                emptyIndexesGroups.Add(new List<int>());
-                currentGroup = emptyIndexesGroups[EmptyIndexGroupCount];
-                currentGroup.Add(emptyYInColumn[j]);
+                groupCount++;
+                emptySpacesGroups.Add(new List<int>());
+                currentGroup = emptySpacesGroups[groupCount];
+                currentGroup.Add(y);
             }
         }
-        return emptyIndexesGroups;
+        return emptySpacesGroups;
     }
-    private List<int> SortedIncrease(List<int> emptyYInColumn)
+    private List<List<int>> GroupCandyAroundEmptySpaces(List<List<int>> groupsOfConsecutiveEmptySpaces)
     {
-        var sortedY = from y in emptyYInColumn
-                      orderby y
-                      select y;
-        return sortedY.ToList();
-    }
-    private List<List<int>> DevideCandyToMoveByGaps(List<List<int>> indexesEmptyGroups)
-    {
-        List<List<int>> indexesToMoveGroups = new List<List<int>>();
-        for (int i = 0; i < indexesEmptyGroups.Count; i++)
+        List<List<int>> candyGroups = new List<List<int>>();
+        for (int i = 0; i < groupsOfConsecutiveEmptySpaces.Count; i++)
         {
-            indexesToMoveGroups.Add(new List<int>());
-            List<int> group = indexesEmptyGroups[i];
-            int yAfterGroup = group[group.Count - 1] + 1;
-            if (i < indexesEmptyGroups.Count - 1)
+            candyGroups.Add(new List<int>());
+            List<int> group = groupsOfConsecutiveEmptySpaces[i];
+            int firstCandyAboveThisGroup = group.Last() + 1;
+            if (i < groupsOfConsecutiveEmptySpaces.Count - 1)
             {
-                List<int> nextGroup = indexesEmptyGroups[i + 1];
-                int previouseYNextGroup = nextGroup[0] - 1;
-                for (int j = yAfterGroup; j <= previouseYNextGroup; j++)
+                List<int> nextGroup = groupsOfConsecutiveEmptySpaces[i + 1];
+                int firstCandyBelowNextGroup = nextGroup[0] - 1;
+                for (int j = firstCandyAboveThisGroup; j <= firstCandyBelowNextGroup; j++)
                 {
-                    indexesToMoveGroups[i].Add(j);
+                    candyGroups[i].Add(j);
                 }
             }
-            else if (i == indexesEmptyGroups.Count - 1)
+            else if (i == groupsOfConsecutiveEmptySpaces.Count - 1)
             {
                 int highestRow = generator.Height - 1;
-                for (int j = yAfterGroup; j <= highestRow; j++)
+                for (int j = firstCandyAboveThisGroup; j <= highestRow; j++)
                 {
-                    indexesToMoveGroups[i].Add(j);
+                    candyGroups[i].Add(j);
                 }
             }
         }
-        return indexesToMoveGroups;
+        return candyGroups;
     }
-    private void MoveGropsDown(int column, List<List<int>> emptyIndexesGroups,
+    private void MoveCandyGropsDown(int column, List<List<int>> emptyIndexesGroups,
         List<List<int>> indexesToMoveGroups)
     {
         for (int i = 0; i < indexesToMoveGroups.Count; i++)
@@ -134,43 +129,17 @@ public class CandyMover : MonoBehaviour
         _moveCandiesCoroutineIsRunning = true;
         yield return new WaitForSeconds(1f);
        
-        Dictionary<int, List<Vector2Int>> columnEmptyIndexesPairs =
-            CreateColumnEmptyIndexesPairs(destroyedCandyIndexes);
-       
+        Dictionary<int, List<Vector2Int>> columnToEmptySpacesDictionary = ColumnToEmptySpacesDictionary(destroyedCandyIndexes);
 
-        for (int i = 0; i < columnEmptyIndexesPairs.Keys.Count; i++)
+        foreach (int column in columnToEmptySpacesDictionary.Keys)
         {
-            int column = columnEmptyIndexesPairs.Keys.ToList()[i];
-            List<Vector2Int> emptyIndexesInColumn = columnEmptyIndexesPairs[column];
-
-            List<List<int>> emptyIndexesGroups = DevideEmptyIndexesByProximity(emptyIndexesInColumn);
-            List<List<int>> indexesToMoveGroups = DevideCandyToMoveByGaps(emptyIndexesGroups);
-            MoveGropsDown(column, emptyIndexesGroups, indexesToMoveGroups);
+            List<Vector2Int> emptySpacesInColumn = columnToEmptySpacesDictionary[column];
+            List<List<int>> groupsOfConsecutiveEmptySpaces = GroupConsecutiveEmptySpaces(emptySpacesInColumn);
+            List<List<int>> groupsOfCandiesAroundEmptySpaces = GroupCandyAroundEmptySpaces(groupsOfConsecutiveEmptySpaces);
+            MoveCandyGropsDown(column, groupsOfConsecutiveEmptySpaces, groupsOfCandiesAroundEmptySpaces);
         }
 
         StartCoroutine(filler.FillEmptyIndexes());
         _moveCandiesCoroutineIsRunning = false;
-    }
-
-    private List<int> GetOnlyY(List<Vector2Int> indexes)
-    {
-        List<int> onlyY = new List<int>();
-        for (int i = 0; i < indexes.Count; i++)
-        {
-            onlyY.Add(indexes[i].y);
-        }
-        return onlyY;
-    }
-    private int FindLowestY(List<int> emptyYInColumn)
-    {
-        int lowestYIndex = emptyYInColumn[0];
-        for (int i = 0; i < emptyYInColumn.Count; i++)
-        {
-            if (emptyYInColumn[i] < lowestYIndex)
-            {
-                lowestYIndex = emptyYInColumn[i];
-            }
-        }
-        return lowestYIndex;
     }
 }

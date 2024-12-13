@@ -86,7 +86,10 @@ public class GridGenerator : MonoBehaviour
     }
     public void ReplaceCandy(int column, int row, List<CandyType> typesToAvoid)
     {
-        Candy candyPrefab = GetAnyCandyExcept(typesToAvoid);
+        List<Candy> candyWithoutSomeTypes = candyPrefabs.Where(candy => !typesToAvoid.Contains(candy.GetCandyType))
+            .ToList();
+        int random = Random.Range(0, candyWithoutSomeTypes.Count);
+        Candy candyPrefab = candyWithoutSomeTypes[random];
         Destroy(candyInstances[column, row].gameObject);
         Vector2 position = candyInstances[column, row].transform.position;
         candyInstances[column, row] = Instantiate(candyPrefab, position,
@@ -105,29 +108,6 @@ public class GridGenerator : MonoBehaviour
         return notOnTheTopEdge && notOnTheBottomEdge;
     }
 
-    private Candy GetAnyCandyExcept(List<CandyType> typeToAvoid)
-    {
-        List<Candy> potentialCandies = candyPrefabs.ToList();
-        List<Candy> candiesToRemove = new List<Candy>();
-        for (int i = 0; i < potentialCandies.Count; i++)
-        {
-            for (int j = 0; j < typeToAvoid.Count; j++)
-            {
-                if (potentialCandies[i].GetCandyType == typeToAvoid[j])
-                {
-                    candiesToRemove.Add(potentialCandies[i]);
-                }
-            }
-        }
-        foreach (Candy candy in candiesToRemove)
-        {
-            potentialCandies.Remove(candy);
-        }
-        int random = Random.Range(0, potentialCandies.Count);
-        Candy candyPrefab = potentialCandies[random];
-        return candyPrefab;
-    }
-
     public void SwopCandies(Vector2Int firstCandyIndexes, Vector2Int secondCandyIndexes)
     {
         Candy first = candyInstances[firstCandyIndexes.x, firstCandyIndexes.y];
@@ -143,22 +123,9 @@ public class GridGenerator : MonoBehaviour
     }
     public void SetCandiesToNullByIndexes(List<Vector2Int> indexes)
     {
-        for (int column = 0; column < width; column++)
+        foreach (var index in indexes)
         {
-            for (int row = 0; row < height; row++)
-            {
-                SetIndexMatchToNullFor(column, row, indexes);
-            }
-        }
-    }
-    private void SetIndexMatchToNullFor(int column, int row, List<Vector2Int> indexesToCheck)
-    {
-        for (int i = 0; i < indexesToCheck.Count; i++)
-        {
-            if (column == indexesToCheck[i].x && row == indexesToCheck[i].y)
-            {
-                candyInstances[column, row] = null;
-            }
+            candyInstances[index.x, index.y] = null;
         }
     }
     public void ResetCandyToIndex(Vector2Int originalIndex, Vector2Int newIndex)

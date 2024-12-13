@@ -69,9 +69,7 @@ public class MatchDestroyer : MonoBehaviour
             Destroy(candy.gameObject);
         }
         generator.SetCandiesToNullByIndexes(candiesToDestroyIndexes);
-       // Debug.Log(candiesToDestroyIndexes.Count);
         scoreCounter.IncreaseScore(candiesToDestroyIndexes, this);
-        //Debug.Log(candiesToDestroyIndexes.Count);
         unregisterAllMatchesInMatchChecker.Invoke();
         StartCoroutine(candyMover.MoveCandiesDown(candiesToDestroyIndexes));
         _destroyMatchesCoroutineIsRunning = false;

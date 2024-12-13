@@ -63,8 +63,12 @@ public class PossibleMatchChecker : MonoBehaviour
     {
         foreach (Candy candy in pulsatingCandy)
         {
-            candy.StopPulsating();
+            if (candy != null)
+            {
+                candy.StopPulsating();
+            }
         }
+        pulsatingCandy.Clear();
     }
     private Vector2Int? FindThirdHorizontalMatchOf(Vector2Int?[] matchOfTwo)
     {

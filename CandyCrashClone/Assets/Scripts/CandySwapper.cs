@@ -133,6 +133,7 @@ public class CandySwapper : MonoBehaviour, IState
     {
         if (Input.GetMouseButtonDown(0))
         {
+            checker.StopAllCandyPulsating();
             Vector2 mousePositionWorld = GetMousePositionWorld(Input.mousePosition);
             startMousePosition = mousePositionWorld;
             clickedCandyIndexes = GetClickedCandyIndexes(mousePositionWorld);

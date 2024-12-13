@@ -7,6 +7,7 @@ public class PossibleMatchChecker : MonoBehaviour
 {
     private GridGenerator generator;
     private float delay = 5f;
+    private List<Candy> pulsatingCandy = new List<Candy>();
     private void Awake()
     {
         generator = GetComponent<GridGenerator>();
@@ -24,10 +25,14 @@ public class PossibleMatchChecker : MonoBehaviour
             Vector2Int? third = FindThirdHorizontalMatchOf(match);
             if (third != null)
             {
-                generator.GetCandyUnderIndex(third.Value).StartPulsating();
+                Candy candy = generator.GetCandyUnderIndex(third.Value);
+                candy.StartPulsating();
+                pulsatingCandy.Add(candy);
                 foreach (Vector2Int? index in match)
                 {
-                    generator.GetCandyUnderIndex(index.Value).StartPulsating();
+                    candy = generator.GetCandyUnderIndex(index.Value);
+                    candy.StartPulsating();
+                    pulsatingCandy.Add(candy);
                 }
                 break;
             }
@@ -40,14 +45,25 @@ public class PossibleMatchChecker : MonoBehaviour
                 Vector2Int? third = FindThirdVerticalMatchOf(match);
                 if (third != null)
                 {
-                    generator.GetCandyUnderIndex(third.Value).StartPulsating();
+                    Candy candy = generator.GetCandyUnderIndex(third.Value);
+                    candy.StartPulsating();
+                    pulsatingCandy.Add(candy);
                     foreach (Vector2Int? index in match)
                     {
-                        generator.GetCandyUnderIndex(index.Value).StartPulsating();
+                        candy = generator.GetCandyUnderIndex(index.Value);
+                        candy.StartPulsating();
+                        pulsatingCandy.Add(candy);
                     }
                     break;
                 }
             }
+        }
+    }
+    public void StopAllCandyPulsating()
+    {
+        foreach (Candy candy in pulsatingCandy)
+        {
+            candy.StopPulsating();
         }
     }
     private Vector2Int? FindThirdHorizontalMatchOf(Vector2Int?[] matchOfTwo)

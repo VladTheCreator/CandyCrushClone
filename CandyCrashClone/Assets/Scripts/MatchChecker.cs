@@ -38,9 +38,12 @@ public class MatchChecker : MonoBehaviour, IState
     {
         if (highlightPossibleMatches == null)
         {
-            Debug.Log("Highlight possible matches");
             highlightPossibleMatches = StartCoroutine(possibleMatchChecker.HighlightPossibleMatchOfThreeOrMore());
         }
+    }
+    public void StopAllCandyPulsating()
+    {
+        possibleMatchChecker.StopAllCandyPulsating();
     }
     public void StopCoroutineHighlightPossibleMatches()
     {

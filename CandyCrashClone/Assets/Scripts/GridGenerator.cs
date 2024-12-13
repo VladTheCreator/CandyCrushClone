@@ -17,7 +17,6 @@ public class GridGenerator : MonoBehaviour
     public int GenerationStep => generationStep;
     private Vector2 startPosition;
     public Vector2 StartPosition => startPosition;
-   
 
     public void InitializeGrid()
     {

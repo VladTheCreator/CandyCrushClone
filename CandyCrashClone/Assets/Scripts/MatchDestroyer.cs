@@ -2,24 +2,27 @@ using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
-public class MatchDestroyer : MonoBehaviour
+public class MatchDestroyer : MonoBehaviour, IState
 {
     private GridGenerator generator;
-    private ScoreCounter scoreCounter;
     private CandyMover candyMover;
+    private ScoreCounter scoreCounter;
     private List<Candy> candiesToDestroy;
     private List<Vector2Int> candiesToDestroyIndexes;
     private bool _destroyMatchesCoroutineIsRunning;
+    private StateMachine owner;
+    private Dictionary<Vector2Int, MatchType> centerInMatchAndMatchType;
+    public event Action OnDestroyMatches;
     public bool DestroyMatchesCoroutineIsRunning => _destroyMatchesCoroutineIsRunning;
-    public bool MoveCandyCoroutineIsRunning => candyMover.MoveCandiesCoroutineIsRunning;
-    public bool FillEmptyIndexesCoroutineIsRunning => candyMover.FillEmptyIndexesCoroutineIsRunning;
+
     public List<Vector2Int> CandiesToDestroyIndexes => candiesToDestroyIndexes;
     private void Awake()
     {
+        candyMover = GetComponent<CandyMover>();
         generator = GetComponent<GridGenerator>();
         scoreCounter = GetComponent<ScoreCounter>();
-        candyMover = GetComponent<CandyMover>();
         candiesToDestroy = new List<Candy>();
         candiesToDestroyIndexes = new List<Vector2Int>();
     }
@@ -31,9 +34,11 @@ public class MatchDestroyer : MonoBehaviour
                 candiesToDestroy.Add(candy);
         }
     }
-
-    internal IEnumerator DestroyMatches(Dictionary<Vector2Int, MatchType> centerInMatchAndMatchType,
-        System.Action unregisterAllMatchesInMatchChecker)
+    public void SetCenterInMatchAndMatchType(Dictionary<Vector2Int, MatchType> centerInMatchAndMatchType)
+    {
+        this.centerInMatchAndMatchType = centerInMatchAndMatchType;
+    }
+    internal IEnumerator DestroyMatches()
     {
         _destroyMatchesCoroutineIsRunning = true;
         yield return new WaitForSeconds(1f);
@@ -70,11 +75,16 @@ public class MatchDestroyer : MonoBehaviour
         }
         generator.SetCandiesToNullByIndexes(candiesToDestroyIndexes);
         scoreCounter.IncreaseScore(candiesToDestroyIndexes, this);
-        unregisterAllMatchesInMatchChecker.Invoke();
-        StartCoroutine(candyMover.MoveCandiesDown(candiesToDestroyIndexes));
+        OnDestroyMatches?.Invoke();
+        candyMover.SetOwner(owner);
+        candyMover.SetCandiesToDestroyIndexes(candiesToDestroyIndexes);
+        owner.ChangeState(candyMover);
         _destroyMatchesCoroutineIsRunning = false;
     }
-
+    public List<Vector2Int> GetCandiesToDestroyIndexes()
+    {
+        return candiesToDestroyIndexes;
+    }
     private void ClearCandiesToDestroy()
     {
         candiesToDestroy.Clear();
@@ -113,5 +123,25 @@ public class MatchDestroyer : MonoBehaviour
             }
         }
         return true;
+    }
+
+    public void Enter()
+    {
+        StartCoroutine(DestroyMatches());
+    }
+
+    public void Execute()
+    {
+        
+    }
+
+    public void Exit()
+    {
+       
+    }
+
+    public void SetOwner(StateMachine stateMachine)
+    {
+        owner = stateMachine;
     }
 }

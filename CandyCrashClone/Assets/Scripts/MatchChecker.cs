@@ -1,9 +1,8 @@
 using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-public class MatchChecker : MonoBehaviour
+public class MatchChecker : MonoBehaviour, IState
 {
     private GridGenerator generator;
     private MatchDestroyer destroyer;
@@ -12,6 +11,7 @@ public class MatchChecker : MonoBehaviour
     private Dictionary<Vector2Int, MatchType> centerInMatchAndMatchType;
     private PossibleMatchChecker possibleMatchChecker;
     private Coroutine highlightPossibleMatches;
+    private StateMachine owner;
     public MatchType GetMatchType(Vector2Int centerInMatch)
     {
         return centerInMatchAndMatchType[centerInMatch];
@@ -33,16 +33,19 @@ public class MatchChecker : MonoBehaviour
             FindMatches();
             ReplaceMatches();
         }
-        StartCoroutineHighlightPossibleMatches();
-
     }
     public void StartCoroutineHighlightPossibleMatches()
     {
-        highlightPossibleMatches = StartCoroutine(possibleMatchChecker.HighlightPossibleMatchOfThreeOrMore());
+        if (highlightPossibleMatches == null)
+        {
+            Debug.Log("Highlight possible matches");
+            highlightPossibleMatches = StartCoroutine(possibleMatchChecker.HighlightPossibleMatchOfThreeOrMore());
+        }
     }
     public void StopCoroutineHighlightPossibleMatches()
     {
         StopCoroutine(highlightPossibleMatches);
+        highlightPossibleMatches = null;
     }
     public bool FindMatches()
     {
@@ -53,7 +56,7 @@ public class MatchChecker : MonoBehaviour
                 CheckNeighbours(column, row);
             }
         }
-        
+
         if (centersInMatches.Count == 0)
             return false;
         else
@@ -65,7 +68,7 @@ public class MatchChecker : MonoBehaviour
         {
             List<Candy> leftRight = generator.CurrentLeftAndRightCandy(center.x, center.y);
             List<Candy> bottomTop = generator.CurrentTopAndBottomCandy(center.x, center.y);
-            
+
             if (centerInMatchAndMatchType[center] == MatchType.horizontal)
             {
                 for (int i = 0; i < leftRight.Count; i++)
@@ -96,12 +99,6 @@ public class MatchChecker : MonoBehaviour
     private void HighlightCandy(Candy candy)
     {
         candy.transform.localScale = new Vector2(0.4f, 0.4f);
-    }
-    public void DestroyMatches()
-    {
-        HighlightMatches();
-        IEnumerator destroyRoutine = destroyer.DestroyMatches(centerInMatchAndMatchType, UnregisterAllMatches);
-        StartCoroutine(destroyRoutine);
     }
     public void ReplaceMatches()
     {
@@ -200,6 +197,27 @@ public class MatchChecker : MonoBehaviour
     private bool CandiesInRangeAreOfTheSameType(List<Candy> checkRange)
     {
         return checkRange.All(candy => candy.GetCandyType == checkRange[0].GetCandyType);
+    }
+    public void Enter()
+    {
+        HighlightMatches();
+        destroyer.SetOwner(owner);
+        destroyer.SetCenterInMatchAndMatchType(centerInMatchAndMatchType);
+        destroyer.OnDestroyMatches += UnregisterAllMatches;
+        owner.ChangeState(destroyer);
+    }
+
+    public void Execute()
+    {
+    }
+
+    public void Exit()
+    {
+    }
+
+    public void SetOwner(StateMachine stateMachine)
+    {
+        owner = stateMachine;
     }
 }
 public enum MatchType

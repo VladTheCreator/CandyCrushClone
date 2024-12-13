@@ -3,57 +3,21 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Collections;
 
-public class CandySwapper : MonoBehaviour
+public class CandySwapper : MonoBehaviour, IState
 {
     private GridGenerator generator;
     private MatchChecker checker;
-    private MatchDestroyer destroyer;
     private SpaceOcupied[,] spaceOcupiedByCandies;
     Vector2 startMousePosition = Vector2.zero;
     Vector2Int? clickedCandyIndexes = null;
     private Vector2Int[] lastSwoped;
+    private StateMachine owner;
     private void Awake()
     {
         generator = GetComponent<GridGenerator>();
         checker = GetComponent<MatchChecker>();
-        destroyer = GetComponent<MatchDestroyer>();
         lastSwoped = new Vector2Int[2];
         DefineSpaceOcupiedByCandies();
-    }
-    void Update()
-    {
-        if (Input.GetMouseButtonDown(0))
-        {
-            Vector2 mousePositionWorld = GetMousePositionWorld(Input.mousePosition);
-            startMousePosition = mousePositionWorld;
-            clickedCandyIndexes = GetClickedCandyIndexes(mousePositionWorld);
-        }
-        if (Input.GetMouseButtonUp(0))
-        {
-            //if player found match don't give him/her a hint
-            checker.StopCoroutineHighlightPossibleMatches();
-
-            if (clickedCandyIndexes != null)
-            {
-                Vector2 mousePositionWorld = GetMousePositionWorld(Input.mousePosition);
-                SwopCandiesInDirectionOfSwap(mousePositionWorld);
-                if (checker.FindMatches())
-                {
-                    checker.DestroyMatches();
-                }
-                else
-                {
-                    StartCoroutine(CancelSwop());
-                    checker.StartCoroutineHighlightPossibleMatches();
-                }
-            }
-            if (!destroyer.DestroyMatchesCoroutineIsRunning
-                && !destroyer.MoveCandyCoroutineIsRunning
-                && !destroyer.FillEmptyIndexesCoroutineIsRunning)
-            {
-                checker.StartCoroutineHighlightPossibleMatches();
-            }
-        }
     }
     private void SwopCandiesInDirectionOfSwap(Vector2 mousePositionWorld)
     {
@@ -162,6 +126,43 @@ public class CandySwapper : MonoBehaviour
     {
         yield return new WaitForSeconds(0.2f);
         generator.SwopCandies(lastSwoped[0], lastSwoped[1]);
+    }
+
+    public void Enter() { }
+    public void Execute()
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+            Vector2 mousePositionWorld = GetMousePositionWorld(Input.mousePosition);
+            startMousePosition = mousePositionWorld;
+            clickedCandyIndexes = GetClickedCandyIndexes(mousePositionWorld);
+        }
+        if (Input.GetMouseButtonUp(0))
+        {
+            if (clickedCandyIndexes != null)
+            {
+                Vector2 mousePositionWorld = GetMousePositionWorld(Input.mousePosition);
+                SwopCandiesInDirectionOfSwap(mousePositionWorld);
+                if (checker.FindMatches())
+                {
+                    checker.SetOwner(owner);
+                    owner.ChangeState(checker);
+                    checker.StopCoroutineHighlightPossibleMatches();
+                    return;
+                }
+                else
+                {
+                    StartCoroutine(CancelSwop());
+                }
+            }
+        }
+        checker.StartCoroutineHighlightPossibleMatches();
+    }
+
+    public void Exit() { }
+    public void SetOwner(StateMachine stateMachine)
+    {
+        owner = stateMachine;
     }
 }
 public struct SpaceOcupied

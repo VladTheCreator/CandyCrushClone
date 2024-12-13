@@ -2,16 +2,20 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BoardFiller : MonoBehaviour
+public class BoardFiller : MonoBehaviour, IState
 {
     private GridGenerator generator;
-    private MatchChecker checker;
+    private StateMachine owner;
+    private MatchChecker matchChecker;
+    private CandySwapper swapper;
+
     private bool _fillEmptyIndexesCoroutineIsRunning;
     public bool FillEmptyIndexesCoroutineIsRunning => _fillEmptyIndexesCoroutineIsRunning;
     private void Awake()
     {
         generator = GetComponent<GridGenerator>();
-        checker = GetComponent<MatchChecker>(); 
+        matchChecker = GetComponent<MatchChecker>();
+        swapper = GetComponent<CandySwapper>();
     }
     public IEnumerator FillEmptyIndexes()
     {
@@ -25,10 +29,34 @@ public class BoardFiller : MonoBehaviour
             Candy instance = Instantiate(prefab, position, Quaternion.identity);
             generator.SetCandyByIndex(emptyIndexes[i], instance);
         }
-        if (checker.FindMatches())
+        if (matchChecker.FindMatches())
         {
-            checker.DestroyMatches();
+            owner.ChangeState(matchChecker);
+        }
+        else
+        {
+            owner.ChangeState(swapper);
         }
         _fillEmptyIndexesCoroutineIsRunning = false;
+    }
+
+    public void Enter()
+    {
+        StartCoroutine(FillEmptyIndexes());
+    }
+
+    public void Execute()
+    {
+
+    }
+
+    public void Exit()
+    {
+
+    }
+
+    public void SetOwner(StateMachine stateMachine)
+    {
+        owner = stateMachine;
     }
 }

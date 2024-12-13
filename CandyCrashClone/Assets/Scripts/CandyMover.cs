@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public class CandyMover : MonoBehaviour
+public class CandyMover : MonoBehaviour, IState
 {
     private GridGenerator generator;
     private BoardFiller filler;
     private bool _moveCandiesCoroutineIsRunning;
+    private List<Vector2Int> candiesToDestroyIndexes;
+    private StateMachine owner;
     public bool MoveCandiesCoroutineIsRunning => _moveCandiesCoroutineIsRunning;
     public bool FillEmptyIndexesCoroutineIsRunning => filler.FillEmptyIndexesCoroutineIsRunning;
     private void Awake()
@@ -124,12 +126,17 @@ public class CandyMover : MonoBehaviour
         }
         return amountOfSpacesInclusive;
     }
-    public IEnumerator MoveCandiesDown(List<Vector2Int> destroyedCandyIndexes)
+    public void SetCandiesToDestroyIndexes(List<Vector2Int> candiesToDestroyIndexes)
+    {
+        this.candiesToDestroyIndexes = candiesToDestroyIndexes;
+    }
+    public IEnumerator MoveCandiesDown()
     {
         _moveCandiesCoroutineIsRunning = true;
         yield return new WaitForSeconds(1f);
        
-        Dictionary<int, List<Vector2Int>> columnToEmptySpacesDictionary = ColumnToEmptySpacesDictionary(destroyedCandyIndexes);
+        Dictionary<int, List<Vector2Int>> columnToEmptySpacesDictionary = 
+            ColumnToEmptySpacesDictionary(candiesToDestroyIndexes);
 
         foreach (int column in columnToEmptySpacesDictionary.Keys)
         {
@@ -138,8 +145,28 @@ public class CandyMover : MonoBehaviour
             List<List<int>> groupsOfCandiesAroundEmptySpaces = GroupCandyAroundEmptySpaces(groupsOfConsecutiveEmptySpaces);
             MoveCandyGropsDown(column, groupsOfConsecutiveEmptySpaces, groupsOfCandiesAroundEmptySpaces);
         }
-
-        StartCoroutine(filler.FillEmptyIndexes());
+        filler.SetOwner(owner);
+        owner.ChangeState(filler);
         _moveCandiesCoroutineIsRunning = false;
+    }
+
+    public void Enter()
+    {
+        StartCoroutine(MoveCandiesDown());
+    }
+
+    public void Execute()
+    {
+        
+    }
+
+    public void Exit()
+    {
+        
+    }
+
+    public void SetOwner(StateMachine stateMachine)
+    {
+        owner = stateMachine;
     }
 }

@@ -9,8 +9,6 @@ public class BoardFiller : MonoBehaviour, IState
     private MatchChecker matchChecker;
     private CandySwapper swapper;
 
-    private bool _fillEmptyIndexesCoroutineIsRunning;
-    public bool FillEmptyIndexesCoroutineIsRunning => _fillEmptyIndexesCoroutineIsRunning;
     private void Awake()
     {
         generator = GetComponent<GridGenerator>();
@@ -19,7 +17,6 @@ public class BoardFiller : MonoBehaviour, IState
     }
     public IEnumerator FillEmptyIndexes()
     {
-        _fillEmptyIndexesCoroutineIsRunning = true;
         yield return new WaitForSeconds(1f);
         List<Vector2Int> emptyIndexes = generator.FindEmpty();
         for (int i = 0; i < emptyIndexes.Count; i++)
@@ -37,7 +34,6 @@ public class BoardFiller : MonoBehaviour, IState
         {
             owner.ChangeState(swapper);
         }
-        _fillEmptyIndexesCoroutineIsRunning = false;
     }
 
     public void Enter()

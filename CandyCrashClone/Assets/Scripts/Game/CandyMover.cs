@@ -7,11 +7,8 @@ public class CandyMover : MonoBehaviour, IState
 {
     private GridGenerator generator;
     private BoardFiller filler;
-    private bool _moveCandiesCoroutineIsRunning;
     private List<Vector2Int> candiesToDestroyIndexes;
     private StateMachine owner;
-    public bool MoveCandiesCoroutineIsRunning => _moveCandiesCoroutineIsRunning;
-    public bool FillEmptyIndexesCoroutineIsRunning => filler.FillEmptyIndexesCoroutineIsRunning;
     private void Awake()
     {
         generator = GetComponent<GridGenerator>();
@@ -132,7 +129,6 @@ public class CandyMover : MonoBehaviour, IState
     }
     public IEnumerator MoveCandiesDown()
     {
-        _moveCandiesCoroutineIsRunning = true;
         yield return new WaitForSeconds(1f);
        
         Dictionary<int, List<Vector2Int>> columnToEmptySpacesDictionary = 
@@ -147,7 +143,6 @@ public class CandyMover : MonoBehaviour, IState
         }
         filler.SetOwner(owner);
         owner.ChangeState(filler);
-        _moveCandiesCoroutineIsRunning = false;
     }
 
     public void Enter()

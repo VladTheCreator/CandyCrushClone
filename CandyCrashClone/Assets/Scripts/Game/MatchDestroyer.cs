@@ -11,11 +11,9 @@ public class MatchDestroyer : MonoBehaviour, IState
     private ScoreCounter scoreCounter;
     private List<Candy> candiesToDestroy;
     private List<Vector2Int> candiesToDestroyIndexes;
-    private bool _destroyMatchesCoroutineIsRunning;
     private StateMachine owner;
     private Dictionary<Vector2Int, MatchType> centerInMatchAndMatchType;
     public event Action OnDestroyMatches;
-    public bool DestroyMatchesCoroutineIsRunning => _destroyMatchesCoroutineIsRunning;
 
     public List<Vector2Int> CandiesToDestroyIndexes => candiesToDestroyIndexes;
     private void Awake()
@@ -40,7 +38,6 @@ public class MatchDestroyer : MonoBehaviour, IState
     }
     internal IEnumerator DestroyMatches()
     {
-        _destroyMatchesCoroutineIsRunning = true;
         yield return new WaitForSeconds(1f);
         ClearCandiesToDestroy();
         List<Vector2Int> centersInMatches = centerInMatchAndMatchType.Keys.ToList();
@@ -79,7 +76,6 @@ public class MatchDestroyer : MonoBehaviour, IState
         candyMover.SetOwner(owner);
         candyMover.SetCandiesToDestroyIndexes(candiesToDestroyIndexes);
         owner.ChangeState(candyMover);
-        _destroyMatchesCoroutineIsRunning = false;
     }
     public List<Vector2Int> GetCandiesToDestroyIndexes()
     {

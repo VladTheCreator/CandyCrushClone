@@ -98,7 +98,7 @@ public class PossibleMatchChecker : MonoBehaviour
         Vector2Int withBiggerY = matchOfTwo.OrderByDescending(c => c.Value.y).First().Value;
         if (withBiggerY.y < generator.Height - 1)
         {
-            Vector2Int upper = GetUpperFromVerticalMatchOfTwo(matchOfTwo);
+            Vector2Int upper = new Vector2Int(withBiggerY.x, withBiggerY.y + 1);
             //left
             if (upper.x > 0)
             {
@@ -134,7 +134,7 @@ public class PossibleMatchChecker : MonoBehaviour
         Vector2Int withLesserY = matchOfTwo.OrderBy(c => c.Value.y).First().Value;
         if (withLesserY.y > 0)
         {
-            Vector2Int lower = GetLowerFromVerticalMatchOfTwo(matchOfTwo);
+            Vector2Int lower = new Vector2Int(withLesserY.x, withLesserY.y - 1);
             //left
             if (lower.x > 0)
             {
@@ -170,7 +170,7 @@ public class PossibleMatchChecker : MonoBehaviour
         Vector2Int withBiggerX = matchOfTwo.OrderByDescending(c => c.Value.x).First().Value;
         if (withBiggerX.x < generator.Width - 1)
         {
-            Vector2Int right = GetRightFromHorizontalMatchOfTwo(matchOfTwo);
+            Vector2Int right = new Vector2Int(withBiggerX.x + 1, withBiggerX.y);
             //upper on the right
             if (right.y < generator.Height - 1)
             {
@@ -206,7 +206,7 @@ public class PossibleMatchChecker : MonoBehaviour
         Vector2Int withLesserX = matchOfTwo.OrderBy(c => c.Value.x).First().Value;
         if (withLesserX.x > 0)
         {
-            Vector2Int left = GetLeftFromHorizontalMatchOfTwo(matchOfTwo);
+            Vector2Int left = new Vector2Int(withLesserX.x - 1, withLesserX.y);
             //check upper on the left from horizontal match of two
             if (left.y < generator.Height - 1)
             {
@@ -236,30 +236,6 @@ public class PossibleMatchChecker : MonoBehaviour
             }
         }
         return null;
-    }
-    private Vector2Int GetLeftFromHorizontalMatchOfTwo(Vector2Int?[] matchOfTwo)
-    {
-        Vector2Int withLesserX = matchOfTwo.OrderBy(c => c.Value.x).First().Value;
-        Vector2Int leftFromMatchOfTwo = new Vector2Int(withLesserX.x - 1, withLesserX.y);
-        return leftFromMatchOfTwo;
-    }
-    private Vector2Int GetLowerFromVerticalMatchOfTwo(Vector2Int?[] matchOfTwo)
-    {
-        Vector2Int withLesserY = matchOfTwo.OrderBy(c => c.Value.y).First().Value;
-        Vector2Int lowerFromMatchOfTwo = new Vector2Int(withLesserY.x, withLesserY.y - 1);
-        return lowerFromMatchOfTwo;
-    }
-    private Vector2Int GetRightFromHorizontalMatchOfTwo(Vector2Int?[] matchOfTwo)
-    {
-        Vector2Int withBiggerX = matchOfTwo.OrderByDescending(c => c.Value.x).First().Value;
-        Vector2Int rightFromMatchOfTwo = new Vector2Int(withBiggerX.x + 1, withBiggerX.y);
-        return rightFromMatchOfTwo;
-    }
-    private Vector2Int GetUpperFromVerticalMatchOfTwo(Vector2Int?[] matchOfTwo)
-    {
-        Vector2Int withBiggerY = matchOfTwo.OrderByDescending(c => c.Value.y).First().Value;
-        Vector2Int upperFromMatchOfTwo = new Vector2Int(withBiggerY.x, withBiggerY.y + 1);
-        return upperFromMatchOfTwo;
     }
     public List<Vector2Int?[]> FindAllMatchesOfTwoInRows()
     {
